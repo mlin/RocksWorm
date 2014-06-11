@@ -11,7 +11,7 @@ test: all
 build/integration_tests: $(OBJS) test_httpd.h
 	g++ -o $@ -g -pthread \
 		-Lbuild/rocksdb-on-cloud/googletest/src/googletest-build -Lbuild/lib \
-		-lgtest_main -lgtest $(OBJS) -lrocksdb-on-cloud -lrocksdb -ljemalloc -lz -lsnappy -lbz2 -lrt -lmicrohttpd -lcurl
+		-lgtest_main -lgtest $(OBJS) -lrocksdb-on-cloud -lrocksdb -ljemalloc -lz -lsnappy -lbz2 -lmicrohttpd -lcurl -lrt
 
 rocksdb-on-cloud:
 	mkdir -p build/rocksdb-on-cloud
