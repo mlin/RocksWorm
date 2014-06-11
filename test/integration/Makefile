@@ -1,5 +1,4 @@
 OBJS=build/test_httpd.o build/roundtrips.o
-CC=g++
 
 all:
 	$(MAKE) rocksdb-on-cloud
@@ -10,9 +9,9 @@ test: all
 	build/integration_tests
 
 build/integration_tests: $(OBJS)
-	$(CC) -o $@ -g -pthread \
-		  -Lbuild/rocksdb-on-cloud/googletest/src/googletest-build -Lbuild/lib \
-		  -lgtest_main -lgtest $(OBJS) -lrocksdb-on-cloud -lrocksdb -ljemalloc -lz -lsnappy -lbz2 -lmicrohttpd -lcurl
+	g++ -o $@ -g -pthread \
+		-Lbuild/rocksdb-on-cloud/googletest/src/googletest-build -Lbuild/lib \
+		-lgtest_main -lgtest $(OBJS) -lrocksdb-on-cloud -lrocksdb -ljemalloc -lz -lsnappy -lbz2 -lmicrohttpd -lcurl
 
 rocksdb-on-cloud:
 	mkdir -p build/rocksdb-on-cloud
@@ -22,7 +21,7 @@ rocksdb-on-cloud:
 		make install
 
 build/%.o: %.cc
-	$(CC) -c -g -Wall -std=c++11 \
+	g++ -c -g -Wall -std=c++11 \
 		-Ibuild/rocksdb-on-cloud/googletest/src/googletest/include -Ibuild/include \
 		-o $@ $^
 
