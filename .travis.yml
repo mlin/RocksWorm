@@ -12,6 +12,7 @@ before_install:
  - sudo dpkg -i libgflags0_2.0-1_amd64.deb
  - wget https://gflags.googlecode.com/files/libgflags-dev_2.0-1_amd64.deb
  - sudo dpkg -i libgflags-dev_2.0-1_amd64.deb
+ - wget http://mirrors.kernel.org/ubuntu/pool/universe/libm/libmicrohttpd/libmicrohttpd10_0.9.33-1_amd64.deb
  - wget http://mirrors.kernel.org/ubuntu/pool/universe/libm/libmicrohttpd/libmicrohttpd-dev_0.9.33-1_amd64.deb
- - sudo dpkg -i libmicrohttpd-dev_0.9.33-1_amd64.deb
+ - sudo dpkg --force-depends -i libmicrohttpd10_0.9.33-1_amd64.deb libmicrohttpd-dev_0.9.33-1_amd64.deb
 script: make -j8 -C test/integration test
