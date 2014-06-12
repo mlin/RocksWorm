@@ -4,7 +4,10 @@
 #define _FILE_OFFSET_BITS 64
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/socket.h>
 #include <fcntl.h>
+#include <stdint.h>
+#include <stdarg.h>
 #include <microhttpd.h>
 
 #include <string>

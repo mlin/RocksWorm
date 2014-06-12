@@ -52,7 +52,7 @@ add_library(rocksdb-on-cloud
             include/rocksdb-on-cloud/GivenManifestHTTPEnv.h)
 add_dependencies(rocksdb-on-cloud upstream_rocksdb)
 add_executable(roc src/roc.cc)
-target_link_libraries(roc -pthread jemalloc rocksdb z snappy bz2 rocksdb-on-cloud)
+target_link_libraries(roc -pthread jemalloc rocksdb z snappy bz2 rt rocksdb-on-cloud)
 
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/include DESTINATION . FILES_MATCHING PATTERN "*.h")
 install(DIRECTORY ${ROCKSDB_INCLUDE_DIR} DESTINATION . FILES_MATCHING PATTERN "*.h")
@@ -92,7 +92,7 @@ if (test)
   target_link_libraries(unit_tests gtest gtest_main -pthread)
 
   # Extra linking for the project.
-  target_link_libraries(unit_tests jemalloc rocksdb z snappy bz2 rocksdb-on-cloud ${CURL_LIBRARY_PATH})
+  target_link_libraries(unit_tests jemalloc rocksdb z snappy bz2 rt rocksdb-on-cloud ${CURL_LIBRARY_PATH})
 
   add_test(unit_tests unit_tests)
 endif()
