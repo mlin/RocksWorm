@@ -18,7 +18,7 @@ ExternalProject_Add(upstream_rocksdb
     PREFIX ${CMAKE_CURRENT_BINARY_DIR}
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
-    BUILD_COMMAND make -j8 static_lib
+    BUILD_COMMAND make -j8 OPT="-DNDEBUG -O2" static_lib
     INSTALL_COMMAND ""
     LOG_DOWNLOAD ON
   )
