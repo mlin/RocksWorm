@@ -321,3 +321,47 @@ TEST(roundtrip, univ) {
 
     httpd.Stop();
 }
+
+TEST(roundtrip, retry) {
+    string dbpath;
+    make_testdb1(dbpath);
+    string roc_fn;
+    ASSERT_EQ(0,make_roc(dbpath,roc_fn));
+
+    TestHTTPd httpd;
+    map<string,string> httpfiles;
+    httpfiles["/roc_integration_tests_roundtrip_retry.roc"] = roc_fn;
+    httpd.Start(PORT,httpfiles);
+
+    stringstream localurl;
+    localurl << "http://localhost:" << PORT << "/roc_integration_tests_roundtrip_retry.roc";
+    HTTPEnvOptions envopts;
+    envopts.http_stderr_log_level = InfoLogLevel::INFO;
+    RocHTTPEnv env(localurl.str(), envopts);
+
+    Status s;
+    DB *db = nullptr;
+    Options dbopts;
+    ReadOptions rdopts;
+    string v;
+
+    dbopts.env = &env;
+    dbopts.info_log_level = InfoLogLevel::WARN;
+
+    httpd.FailNextRequests(1);
+    s = rocksdb::DB::OpenForReadOnly(dbopts,"",&db);
+    ASSERT_TRUE(s.ok());
+
+    httpd.FailNextRequests(3);
+    s = db->Get(rdopts, Slice("foo"), &v);
+    ASSERT_TRUE(s.ok());
+    ASSERT_EQ(string("Lorem"),v);
+
+    httpd.FailNextRequests(1);
+    s = db->Get(rdopts, Slice("bogus"), &v);
+    ASSERT_TRUE(s.IsNotFound());
+
+    delete db;
+
+    httpd.Stop();
+}

@@ -8,7 +8,7 @@ test: all
 	build/rocksdb-on-cloud/unit_tests
 	build/integration_tests
 
-build/integration_tests: $(OBJS) test_httpd.h
+build/integration_tests: $(OBJS) test_httpd.h build/lib/librocksdb.a build/lib/librocksdb-on-cloud.a
 	g++ -o $@ -g -pthread \
 		-Lbuild/rocksdb-on-cloud/googletest/src/googletest-build -Lbuild/lib \
 		-lgtest_main -lgtest $(OBJS) -lrocksdb-on-cloud -lrocksdb -ljemalloc -lz -lsnappy -lbz2 -lmicrohttpd -lcurl -lrt

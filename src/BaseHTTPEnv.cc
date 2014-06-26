@@ -169,9 +169,9 @@ Status BaseHTTPEnv::RetryHead(const string& fname, HTTP::headers& response_heade
         if (c != CURLE_OK) {
             s = CURLcodeToStatus(c);
         } else if (response_code >= 500 && response_code <= 599) {
-            Error(&http_logger_, "HEAD %s => %d (%dms)", CensorURL(url).c_str(), response_code, t.millis());
             s = HTTPcodeToStatus(response_code);
         } else if (response_code < 200 || response_code >= 300) {
+            Error(&http_logger_, "HEAD %s => %d (%dms)", CensorURL(url).c_str(), response_code, t.millis());
             return HTTPcodeToStatus(response_code);
         } else {
             Info(&http_logger_, "HEAD %s => %d (%dms)", CensorURL(url).c_str(), response_code, t.millis());
