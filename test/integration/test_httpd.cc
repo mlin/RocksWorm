@@ -65,26 +65,31 @@ int TestHTTPd::OnRequest(MHD_Connection *connection,
     unsigned int response_code = 404;
     int ret;
 
-    auto entry = files_.find(url);
-    if (entry != files_.end()) {
-        int fd = open(entry->second.c_str(), O_RDONLY);
-        if (fd > 0) {
-            struct stat st;
-            if (fstat(fd,&st) == 0) {
-                size_t lo, hi;
-                if (get_range_header(connection,lo,hi)) {
-                    //cout << lo << " - " << hi << endl;
-                    if (hi >= lo && lo < size_t(st.st_size) && hi < size_t(st.st_size)) {
-                        response_code = 206;
-                        // TODO set content-range response header, "lo-hi/st.st_size"
-                        if (!(response = MHD_create_response_from_fd_at_offset(hi-lo+1, fd, lo))) return MHD_NO;
-                    } else response_code = 416;
-                } else {
-                    response_code = 200;
-                    if (!(response = MHD_create_response_from_fd(st.st_size, fd))) return MHD_NO;
-                }
-            } else response_code = 500;
+    if (requests_to_fail_ == 0) {
+        auto entry = files_.find(url);
+        if (entry != files_.end()) {
+            int fd = open(entry->second.c_str(), O_RDONLY);
+            if (fd > 0) {
+                struct stat st;
+                if (fstat(fd,&st) == 0) {
+                    size_t lo, hi;
+                    if (get_range_header(connection,lo,hi)) {
+                        //cout << lo << " - " << hi << endl;
+                        if (hi >= lo && lo < size_t(st.st_size) && hi < size_t(st.st_size)) {
+                            response_code = 206;
+                            // TODO set content-range response header, "lo-hi/st.st_size"
+                            if (!(response = MHD_create_response_from_fd_at_offset(hi-lo+1, fd, lo))) return MHD_NO;
+                        } else response_code = 416;
+                    } else {
+                        response_code = 200;
+                        if (!(response = MHD_create_response_from_fd(st.st_size, fd))) return MHD_NO;
+                    }
+                } else response_code = 500;
+            }
         }
+    } else {
+        response_code = 500;
+        --requests_to_fail_;
     }
 
     if (response == nullptr) {
@@ -95,20 +100,3 @@ int TestHTTPd::OnRequest(MHD_Connection *connection,
 
     return ret;
 }
-/*
-int
-main ()
-{
-  struct MHD_Daemon *daemon;
-
-  daemon = MHD_start_daemon (MHD_USE_SELECT_INTERNALLY, PORT, NULL, NULL,
-                             &answer_to_connection, NULL, MHD_OPTION_END);
-  if (NULL == daemon)
-    return 1;
-
-  getchar ();
-
-  MHD_stop_daemon (daemon);
-  return 0;
-}
-*/
