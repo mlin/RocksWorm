@@ -68,7 +68,7 @@ if (test)
   # http://mirkokiefer.com/blog/2013/03/cmake-by-example/
   # http://stackoverflow.com/a/9695234
   ExternalProject_Add(googletest
-    URL https://googletest.googlecode.com/files/gtest-1.7.0.zip
+    URL https://github.com/google/googletest/archive/release-1.7.0.zip
     PREFIX ${CMAKE_CURRENT_BINARY_DIR}/googletest
     INSTALL_COMMAND ""
     LOG_DOWNLOAD ON
