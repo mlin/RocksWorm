@@ -118,7 +118,7 @@ Status BaseHTTPEnv::PrepareGet(const std::string& fname, uint64_t offset, size_t
 }
 
 void BaseHTTPEnv::LogHeaders(const HTTP::headers& hdrs) {
-    if (opts_.http_stderr_log_level <= InfoLogLevel::DEBUG) {
+    if (opts_.http_stderr_log_level <= InfoLogLevel::DEBUG_LEVEL) {
         ostringstream stm;
         for (auto hdr : hdrs) {
             stm << hdr.first << ": " << hdr.second << endl;
@@ -244,10 +244,10 @@ Status BaseHTTPEnv::RetryGet(const string& fname, uint64_t offset, size_t n,
     return s;
 }
 
-bool BaseHTTPEnv::FileExists(const std::string& fname) {
+Status BaseHTTPEnv::FileExists(const std::string& fname) {
     uint64_t ignore;
     Status s = GetFileSize(fname, &ignore);
-    return s.ok();
+    return s.ok() ? Status::OK() : Status::NotFound();
 }
 
 Status BaseHTTPEnv::GetFileSize(const std::string& fname, uint64_t *file_size) {
@@ -299,15 +299,4 @@ Status BaseHTTPEnv::HTTPcodeToStatus(long response_code) {
     ostringstream stm;
     stm << "HTTP response code " << response_code;
     return Status::IOError(stm.str());
-}
-
-void BaseHTTPEnv::SuggestedRocksDBOptionsForWriting(Options& dbopts) {
-    dbopts.create_if_missing = true;
-    dbopts.block_size = 65536;
-    dbopts.write_buffer_size = 16 * 1024 * 1024;
-    dbopts.target_file_size_base = 4 * dbopts.write_buffer_size;
-}
-
-void BaseHTTPEnv::SuggestedRocksDBOptionsForReading(Options& dbopts) {
-    dbopts.info_log_level = InfoLogLevel::WARN;
 }

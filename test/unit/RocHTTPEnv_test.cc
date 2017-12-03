@@ -6,7 +6,7 @@ using namespace std;
 using namespace rocksdb;
 
 TEST(RocHTTPEnv, testdb1) {
-    RocHTTPEnv env("https://googledrive.com/host/0B84c7AijY35-ek51dVVTRDdndEE/testdb1.roc", HTTPEnvOptions());
+    RocHTTPEnv env("https://github.com/mlin/rocksdb-on-cloud/raw/master/test/data/4e32de754389b819d8569c84604653d01859bd564f788be8fabb657412da3d93/testdb1.roc", HTTPEnvOptions());
 
     Status s;
     DB *db = nullptr;
@@ -15,7 +15,7 @@ TEST(RocHTTPEnv, testdb1) {
     string v;
 
     dbopts.env = &env;
-    dbopts.info_log_level = InfoLogLevel::WARN;
+    dbopts.info_log_level = InfoLogLevel::WARN_LEVEL;
 
     s = rocksdb::DB::OpenForReadOnly(dbopts,"",&db);
     ASSERT_TRUE(s.ok());

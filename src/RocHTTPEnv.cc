@@ -80,7 +80,7 @@ Status RocHTTPEnv::EnsureManifest() {
 
     if (ans.size() == 0) return Status::Corruption("empty roc file");
 
-    if (opts_.http_stderr_log_level <= InfoLogLevel::INFO) {
+    if (opts_.http_stderr_log_level <= InfoLogLevel::INFO_LEVEL) {
         ostringstream msg;
         msg << CensorURL(base_url_) << " roc manifest:" << endl;
         for (auto entry : ans) {

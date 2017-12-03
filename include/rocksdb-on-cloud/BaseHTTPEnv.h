@@ -46,7 +46,7 @@ struct HTTPEnvOptions {
         , retry_times(4)
         , retry_initial_delay(500000)
         , retry_backoff_factor(2)
-        , http_stderr_log_level(rocksdb::InfoLogLevel::WARN)
+        , http_stderr_log_level(rocksdb::InfoLogLevel::WARN_LEVEL)
         {}
 };
 
@@ -62,6 +62,10 @@ public:
         fprintf(stderr, "%s ", fname_.c_str());
         vfprintf(stderr, format, ap);
         fprintf(stderr, "\n");
+    }
+
+    void LogHeader(const char* format, va_list ap) override {
+        // skip excessive detail for read-only uses
     }
 };
 
@@ -121,7 +125,7 @@ public:
 
     // The base implementation of FileExists returns true if GetFileSize
     // succeeds and false otherwise
-    bool FileExists(const std::string& fname) override;
+    rocksdb::Status FileExists(const std::string& fname) override;
 
     rocksdb::Status NewSequentialFile(const std::string& fname,
                                       std::unique_ptr<rocksdb::SequentialFile>* result,
@@ -130,17 +134,6 @@ public:
     rocksdb::Status NewRandomAccessFile(const std::string& fname,
                                         std::unique_ptr<rocksdb::RandomAccessFile>* result,
                                         const rocksdb::EnvOptions& options) override;
-
-    // Suggested RocksDB options for writing, mainly increasing the block size
-    // as appropriate for higher-latency HTTP reads. You should also configure
-    // options affecting performance and memory usage (e.g. write buffer
-    // number, compaction style, WAL disabling) and call
-    // Env::SetBackgroundThreads
-    static void SuggestedRocksDBOptionsForWriting(rocksdb::Options& dbopts);
-
-    // Suggested RocksDB options for reading. You should also set block_cache
-    // and block_cache_compressed.
-    static void SuggestedRocksDBOptionsForReading(rocksdb::Options& dbopts);
 
     // Misc unsupported/pass-through methods
 
@@ -195,11 +188,14 @@ public:
         return rocksdb::Status::OK();
     }
   
-    void Schedule(
-      void (*function)(void* arg),
-      void* arg,
-      rocksdb::Env::Priority pri = rocksdb::Env::LOW) override {
-        return inner_env_->Schedule(function, arg, pri);
+    void Schedule(void (*function)(void* arg), void* arg,
+                        Priority pri = LOW, void* tag = nullptr,
+                        void (*unschedFunction)(void* arg) = 0) override {
+        return inner_env_->Schedule(function, arg, pri, tag, unschedFunction);
+    }
+
+    int UnSchedule(void* arg, Priority pri) override {
+        return inner_env_->UnSchedule(arg, pri);
     }
 
     void StartThread(void (*function)(void* arg), void* arg) override {
@@ -246,8 +242,16 @@ public:
         return inner_env_->GetAbsolutePath(db_path, output_path);
     }
 
+    int GetBackgroundThreads(Priority pri = LOW) override {
+        return inner_env_->GetBackgroundThreads(pri);
+    }
+
     void SetBackgroundThreads(int number, rocksdb::Env::Priority pri = LOW) override {
         return inner_env_->SetBackgroundThreads(number, pri);
+    }
+
+    void IncBackgroundThreadsIfNeeded(int number, Priority pri) override {
+        return inner_env_->IncBackgroundThreadsIfNeeded(number, pri);
     }
 
     std::string TimeToString(uint64_t time) override {

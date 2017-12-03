@@ -12,8 +12,8 @@ TEST(GivenManifestHTTPEnv, SimpleOps) {
     manifest["/foo"] = sz*2;
     GivenManifestHTTPEnv env("http://www.mlin.net", manifest, HTTPEnvOptions());
 
-    ASSERT_TRUE(env.FileExists("/index.html"));
-    ASSERT_FALSE(env.FileExists("/bar"));
+    ASSERT_TRUE(env.FileExists("/index.html").ok());
+    ASSERT_FALSE(env.FileExists("/bar").ok());
 
     uint64_t reported_sz = 0;
     Status s = env.GetFileSize("/index.html", &reported_sz);
@@ -88,7 +88,7 @@ TEST(GivenManifestHTTPEnv, HTTPError) {
     GivenManifestHTTPEnv::manifest manifest;
     manifest["BOGUS"] = 1;
     HTTPEnvOptions envopts;
-    envopts.http_stderr_log_level = InfoLogLevel::INFO;
+    envopts.http_stderr_log_level = InfoLogLevel::INFO_LEVEL;
     GivenManifestHTTPEnv env("http://www.google.com", manifest, envopts);
 
     unique_ptr<SequentialFile> f;
@@ -106,7 +106,7 @@ TEST(GivenManifestHTTPEnv, CurlError) {
     manifest["BOGUS"] = 1;
     HTTPEnvOptions opts;
     opts.retry_times = 1;
-    opts.http_stderr_log_level = InfoLogLevel::INFO;
+    opts.http_stderr_log_level = InfoLogLevel::INFO_LEVEL;
     GivenManifestHTTPEnv env("http://www.notarealdomain194851.com", manifest, opts);
 
     unique_ptr<SequentialFile> f;
@@ -121,11 +121,11 @@ TEST(GivenManifestHTTPEnv, CurlError) {
 
 TEST(GivenManifestHTTPEnv, testdb1) {
     GivenManifestHTTPEnv::manifest manifest;
-    manifest["0B84c7AijY35-SmhZVUhzSGE3SVE/IDENTITY"] = 37;
-    manifest["0B84c7AijY35-SmhZVUhzSGE3SVE/CURRENT"] = 16;
-    manifest["0B84c7AijY35-SmhZVUhzSGE3SVE/MANIFEST-000004"] = 145;
-    manifest["0B84c7AijY35-SmhZVUhzSGE3SVE/000007.sst"] = 521;
-    GivenManifestHTTPEnv env("https://googledrive.com/host/", manifest, HTTPEnvOptions());
+    manifest["4e32de754389b819d8569c84604653d01859bd564f788be8fabb657412da3d93/IDENTITY"] = 37;
+    manifest["4e32de754389b819d8569c84604653d01859bd564f788be8fabb657412da3d93/CURRENT"] = 16;
+    manifest["4e32de754389b819d8569c84604653d01859bd564f788be8fabb657412da3d93/MANIFEST-000004"] = 145;
+    manifest["4e32de754389b819d8569c84604653d01859bd564f788be8fabb657412da3d93/000007.sst"] = 521;
+    GivenManifestHTTPEnv env("https://github.com/mlin/rocksdb-on-cloud/raw/master/test/data/", manifest, HTTPEnvOptions());
 
     Status s;
     DB *db = nullptr;
@@ -134,9 +134,9 @@ TEST(GivenManifestHTTPEnv, testdb1) {
     string v;
 
     dbopts.env = &env;
-    dbopts.info_log_level = InfoLogLevel::WARN;
+    dbopts.info_log_level = InfoLogLevel::WARN_LEVEL;
 
-    s = rocksdb::DB::OpenForReadOnly(dbopts,"0B84c7AijY35-SmhZVUhzSGE3SVE",&db);
+    s = rocksdb::DB::OpenForReadOnly(dbopts,"4e32de754389b819d8569c84604653d01859bd564f788be8fabb657412da3d93",&db);
     ASSERT_TRUE(s.ok());
 
     s = db->Get(rdopts, Slice("foo"), &v);
