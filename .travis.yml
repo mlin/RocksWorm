@@ -1,18 +1,10 @@
 language: cpp
 compiler: gcc
+dist: trusty
 before_install:
-# Ugly dependency incantations needed to build RocksDB on Ubuntu 12.04
-# Also libcurl4-openssl-dev for rocksdb-on-cloud and libmicrohttpd for tests
  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
  - sudo apt-get update -qq
- - sudo apt-get install -y -qq gcc-4.8 g++-4.8 zlib1g-dev libbz2-dev libsnappy-dev libjemalloc-dev libcurl4-openssl-dev
- - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 50
- - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 50
- - wget https://gflags.googlecode.com/files/libgflags0_2.0-1_amd64.deb
- - sudo dpkg -i libgflags0_2.0-1_amd64.deb
- - wget https://gflags.googlecode.com/files/libgflags-dev_2.0-1_amd64.deb
- - sudo dpkg -i libgflags-dev_2.0-1_amd64.deb
- - wget http://ftp.gnu.org/gnu/libmicrohttpd/libmicrohttpd-0.9.37.tar.gz
- - tar zxf libmicrohttpd-0.9.37.tar.gz
- - pushd libmicrohttpd-0.9.37 && ./configure && make -j8 && sudo make install && sudo ldconfig && popd
+ - sudo apt-get install -y -qq  gcc-5 g++-5 binutils zlib1g-dev libbz2-dev libsnappy-dev libjemalloc-dev libcurl4-openssl-dev libgflags-dev libmicrohttpd-dev
+ - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 60 --slave /usr/bin/g++ g++ /usr/bin/g++-5 --slave /usr/bin/gcov gcov /usr/bin/gcov-5
+ - tar zxf <(curl -L https://github.com/facebook/zstd/archive/v1.2.0.tar.gz) && make -C zstd-* -j8 && sudo make -C zstd-* install && sudo ldconfig
 script: make -j8 -C test/integration test
