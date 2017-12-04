@@ -13,14 +13,12 @@ ENDIF(NOT CMAKE_BUILD_TYPE)
 # Make PROJECT_SOURCE_DIR, PROJECT_BINARY_DIR, and PROJECT_NAME available.
 project(rocksdb-on-cloud)
 
-# We set DISABLE_JEMALLOC=1 to avoid link-time dependency to jemalloc; the
-# user should activate it at runtime with LD_PRELOAD instead.
 ExternalProject_Add(upstream_rocksdb
     URL https://github.com/facebook/rocksdb/archive/v5.8.7.zip
     PREFIX ${CMAKE_CURRENT_BINARY_DIR}
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
-    BUILD_COMMAND bash -c "export PORTABLE=1 && export DISABLE_JEMALLOC=1 && export USE_SSE=1 && export OPT='-DNDEBUG -O3 -march=ivybridge -msse4.2 -DHAVE_SSE42' && make -n static_lib && make -j4 static_lib"
+    BUILD_COMMAND bash -c "export PORTABLE=1 && export USE_SSE=1 && export OPT='-DNDEBUG -O3 -march=ivybridge -msse4.2 -DHAVE_SSE42' && export USE_RTTI=1 && make -n static_lib && make -j4 static_lib"
     INSTALL_COMMAND ""
     LOG_DOWNLOAD ON
   )
@@ -41,7 +39,7 @@ include_directories(BEFORE ${CURL_INCLUDE_DIR})
 
 execute_process(COMMAND git describe --tags --long --dirty --always
                 OUTPUT_VARIABLE GIT_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGIT_VERSION=\"\\\"${GIT_VERSION}\\\"\" -pthread -std=c++14 -Wall -Werror=return-type -Werror=unused-result -Wno-sign-compare -fdiagnostics-color=auto -march=ivybridge -fno-rtti")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGIT_VERSION=\"\\\"${GIT_VERSION}\\\"\" -pthread -std=c++14 -Wall -Werror=return-type -Werror=unused-result -Wno-sign-compare -fdiagnostics-color=auto -march=ivybridge")
 set(CMAKE_CXX_FLAGS_RELEASE "-gdwarf -DNDEBUG -O3")
 
 ################################
@@ -57,7 +55,7 @@ add_library(rocksdb-on-cloud
             include/rocksdb-on-cloud/GivenManifestHTTPEnv.h)
 add_dependencies(rocksdb-on-cloud upstream_rocksdb)
 add_executable(roc src/roc.cc)
-target_link_libraries(roc -pthread rocksdb z snappy bz2 zstd rt rocksdb-on-cloud)
+target_link_libraries(roc -pthread rocksdb-on-cloud rocksdb jemalloc z snappy bz2 zstd rt)
 
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/include DESTINATION . FILES_MATCHING PATTERN "*.h")
 install(DIRECTORY ${ROCKSDB_INCLUDE_DIR} DESTINATION . FILES_MATCHING PATTERN "*.h")
@@ -93,7 +91,7 @@ if (test)
   ##############
   add_executable(unit_tests test/unit/HTTP_test.cc include/rocksdb-on-cloud/GivenManifestHTTPEnv.h test/unit/GivenManifestHTTPEnv_test.cc test/unit/RocHTTPEnv_test.cc)
 
-  target_link_libraries(unit_tests -pthread rocksdb-on-cloud rocksdb z snappy bz2 zstd rt ${CURL_LIBRARY_PATH} gtest gtest_main)
+  target_link_libraries(unit_tests -pthread rocksdb-on-cloud rocksdb jemalloc z snappy bz2 zstd rt ${CURL_LIBRARY_PATH} gtest gtest_main)
 
   add_test(unit_tests unit_tests)
 endif()

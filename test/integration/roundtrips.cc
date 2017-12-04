@@ -3,6 +3,7 @@
 #include "rocksdb/db.h"
 #include "rocksdb/env.h"
 #include "rocksdb/cache.h"
+#include "rocksdb/table.h"
 #include "gtest/gtest.h"
 #include "test_httpd.h"
 #include "rocksdb-on-cloud/RocHTTPEnv.h"
@@ -68,7 +69,7 @@ TEST(roundtrip, small) {
     string v;
 
     dbopts.env = &env;
-    dbopts.info_log_level = InfoLogLevel::WARN;
+    dbopts.info_log_level = InfoLogLevel::WARN_LEVEL;
 
     s = rocksdb::DB::OpenForReadOnly(dbopts,"",&db);
     ASSERT_TRUE(s.ok());
@@ -139,10 +140,15 @@ void make_mediumdb(string& ans) {
     WriteOptions wropts;
     Options dbopts;
     dbopts.create_if_missing = true;
-    dbopts.block_size = 65536;
     dbopts.write_buffer_size = 16*1048576;
     dbopts.target_file_size_base = 64*1048576;
     dbopts.target_file_size_multiplier = 2;
+
+    // 256 KiB blocks, with a large sharded cache
+    rocksdb::BlockBasedTableOptions bbto;
+    bbto.format_version = 2;
+    bbto.block_size = 256 * 1024;
+    dbopts.table_factory.reset(rocksdb::NewBlockBasedTableFactory(bbto));
 
     s = DB::Open(dbopts,DBPATH,&db);
     assert(s.ok());
@@ -186,8 +192,12 @@ TEST(roundtrip, medium) {
     string v;
 
     dbopts.env = &env;
-    dbopts.info_log_level = InfoLogLevel::WARN;
-    dbopts.block_cache = NewLRUCache(1024*1048576); 
+    dbopts.info_log_level = InfoLogLevel::WARN_LEVEL;
+    rocksdb::BlockBasedTableOptions bbto;
+    bbto.format_version = 2;
+    bbto.block_cache = rocksdb::NewLRUCache(1024*1048576, 4);
+    dbopts.table_factory.reset(rocksdb::NewBlockBasedTableFactory(bbto));
+
     s = rocksdb::DB::OpenForReadOnly(dbopts,"",&db);
     ASSERT_TRUE(s.ok());
 
@@ -290,8 +300,11 @@ TEST(roundtrip, univ) {
     string v;
 
     dbopts.env = &env;
-    dbopts.info_log_level = InfoLogLevel::WARN;
-    dbopts.block_cache = NewLRUCache(1024*1048576); 
+    dbopts.info_log_level = InfoLogLevel::WARN_LEVEL;
+    rocksdb::BlockBasedTableOptions bbto;
+    bbto.format_version = 2;
+    bbto.block_cache = rocksdb::NewLRUCache(1024*1048576, 4);
+    dbopts.table_factory.reset(rocksdb::NewBlockBasedTableFactory(bbto));
     s = rocksdb::DB::OpenForReadOnly(dbopts,"",&db);
     ASSERT_TRUE(s.ok());
 
@@ -336,7 +349,7 @@ TEST(roundtrip, retry) {
     stringstream localurl;
     localurl << "http://localhost:" << PORT << "/roc_integration_tests_roundtrip_retry.roc";
     HTTPEnvOptions envopts;
-    envopts.http_stderr_log_level = InfoLogLevel::INFO;
+    envopts.http_stderr_log_level = InfoLogLevel::INFO_LEVEL;
     RocHTTPEnv env(localurl.str(), envopts);
 
     Status s;
@@ -346,7 +359,7 @@ TEST(roundtrip, retry) {
     string v;
 
     dbopts.env = &env;
-    dbopts.info_log_level = InfoLogLevel::WARN;
+    dbopts.info_log_level = InfoLogLevel::WARN_LEVEL;
 
     httpd.FailNextRequests(1);
     s = rocksdb::DB::OpenForReadOnly(dbopts,"",&db);
