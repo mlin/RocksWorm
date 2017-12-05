@@ -26,7 +26,8 @@ bool TestHTTPd::Start(unsigned short port, const map<string,string>& files) {
     port_ = port;
     files_ = files;
     d_ = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY | MHD_USE_THREAD_PER_CONNECTION,
-                          port, nullptr, nullptr, &on_request, this, MHD_OPTION_END);
+                          port, nullptr, nullptr, &on_request, this,
+                          MHD_OPTION_CONNECTION_TIMEOUT, 10, MHD_OPTION_END);
 
     if (!d_) {
         cerr << "TestHTTPd::Start: MHD_start_daemon failed" << endl;
