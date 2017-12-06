@@ -1,10 +1,11 @@
-// roc
+// MakeRocksWormFileFromDB
 //
-// Given the path to a RocksDB database at rest, generate a .roc file for
+// Given the path to a RocksDB database at rest, generate a RocksWorm file for
 // upload to cloud storage. "At rest" means no process is writing to the
-// database, and the last writer process called Flush before exiting.
+// database, and the last writer process called Flush before exiting (therefore
+// the write-ahead log is empty).
 //
-// The .roc file simply consists of the concatenated contents of several files,
+// The RocksWorm file consists of the concatenated contents of several files,
 // followed by a trailing manifest. The format of the manifest is as follows:
 //
 // MANIFEST   ::= FILE_LIST uint64 MAGIC       the integer is the total size of 
@@ -38,8 +39,8 @@ using namespace rocksdb;
 #define IS_BIG_ENDIAN (*(uint16_t *)"\0\xff" < 0x100)
 
 void usage() {
-    cout << "Usage: roc /rocksdb/database/path [dest.roc]" << endl;
-    cout << "Emits roc file to standard out if destination path isn't specified." << endl;
+    cout << "Usage: MakeRocksWormFileFromDB /rocksdb/database/path [dest.rocksworm]" << endl;
+    cout << "Emits RocksWorm file to standard out if destination path isn't specified." << endl;
 }
 
 struct file_entry {
@@ -192,7 +193,7 @@ int main(int argc, char** argv) {
     }
     manifest.push_back(file_entry(fn_manifest,sz));
     
-    // emit roc file to either destination file or standard out
+    // emit RocksWorm file to either destination file or standard out
     if (argc >= 3) {
         ofstream dest;
         dest.open(argv[2]);

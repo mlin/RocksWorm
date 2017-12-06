@@ -1,7 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include "gtest/gtest.h"
-#include "rocksdb-on-cloud/GivenManifestHTTPEnv.h"
+#include "RocksWorm/GivenManifestHTTPEnv.h"
 using namespace std;
 using namespace rocksdb;
 

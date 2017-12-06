@@ -4,10 +4,9 @@ files prefixed by a certain base URL, where the manifest has URL suffixes and
 sizes of available files
 */
 
-#ifndef GIVENMANIFESTHTTPENV_H
-#define GIVENMANIFESTHTTPENV_H
+#pragma once
 
-#include "rocksdb-on-cloud/BaseHTTPEnv.h"
+#include "RocksWorm/BaseHTTPEnv.h"
 #include <map>
 
 class GivenManifestHTTPEnv : public BaseHTTPEnv {
@@ -58,6 +57,3 @@ public:
         return rocksdb::Status::OK();
     }
 };
-
-#endif
-

@@ -1,4 +1,4 @@
-#include "rocksdb-on-cloud/RocHTTPEnv.h"
+#include "RocksWorm/RocksWormHTTPEnv.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -6,7 +6,7 @@ using namespace std;
 using namespace rocksdb;
 
 // get the last n bytes of the roc file
-Status RocHTTPEnv::GetRocTail(size_t n, Slice* ans, char* scratch) {
+Status RocksWormHTTPEnv::GetTail(size_t n, Slice* ans, char* scratch) {
     assert(n);
     assert(scratch);
     assert(ans);
@@ -18,7 +18,7 @@ Status RocHTTPEnv::GetRocTail(size_t n, Slice* ans, char* scratch) {
     if (it == headers.end()) return Status::IOError("HTTP HEAD response didn't include Content-Length header");
     unsigned long long rocsz = strtoull(it->second.c_str(), nullptr, 10);
 
-    if (!rocsz) return Status::Corruption("HTTP server reports empty roc file");
+    if (!rocsz) return Status::Corruption("HTTP server reports empty RocksWorm file");
 
     // GET the file tail
     return RetryGet("", (rocsz>=n ? rocsz-n : 0), std::min((unsigned long long)n,rocsz), headers, ans, scratch);
@@ -26,63 +26,63 @@ Status RocHTTPEnv::GetRocTail(size_t n, Slice* ans, char* scratch) {
 
 // Read the .roc manifest if we haven't already. See comments in roc.cc for
 // details about the format
-Status RocHTTPEnv::EnsureManifest() {
+Status RocksWormHTTPEnv::EnsureManifest() {
     if (manifest_.size()) return Status::OK();
 
     size_t rdsz = 16384;
     unique_ptr<char[]> scratch(new char[rdsz]);
-    Slice roc_tail;
+    Slice tail;
 
     // fetch tail of roc file
-    Status s = GetRocTail(rdsz, &roc_tail, scratch.get());
+    Status s = GetTail(rdsz, &tail, scratch.get());
     if (!s.ok()) return s;
 
     // read magic and manifest size
-    if (roc_tail.size() < 12) return Status::Corruption("invalid roc file");
-    const char *magic = roc_tail.data() + roc_tail.size() - 4;
+    if (tail.size() < 12) return Status::Corruption("invalid RocksWorm file");
+    const char *magic = tail.data() + tail.size() - 4;
     if (magic[0] != 'R' || magic[1] != 'O' || magic[2] != 'C' || magic[3] != '0') {
-        return Status::Corruption("not a roc file");
+        return Status::Corruption("not a RocksWorm file");
     }
-    uint64_t manifest_size = *(uint64_t*)(roc_tail.data() + roc_tail.size() - 12);
+    uint64_t manifest_size = *(uint64_t*)(tail.data() + tail.size() - 12);
 
     // ensure we have the entire manifest
-    while (roc_tail.size() < manifest_size+12) {
-        uint64_t last = roc_tail.size();
+    while (tail.size() < manifest_size+12) {
+        uint64_t last = tail.size();
         rdsz *= 4;
         scratch.reset(new char[rdsz]);
-        s = GetRocTail(rdsz, &roc_tail, scratch.get());
+        s = GetTail(rdsz, &tail, scratch.get());
         if (!s.ok()) return s;
-        if (roc_tail.size() <= last) return Status::Corruption("invalid roc file");
+        if (tail.size() <= last) return Status::Corruption("invalid RocksWorm file");
     }
 
     // read each file entry
-    char *pos = (char*)(roc_tail.data()+roc_tail.size()-12-manifest_size);
+    char *pos = (char*)(tail.data()+tail.size()-12-manifest_size);
     const char *last_pos = pos+manifest_size;
     uint64_t current_offset = 0;
-    roc_manifest ans;
+    RocksWormManifest ans;
     while (pos < last_pos) {
-        if (pos+8 >= last_pos) return Status::Corruption("invalid roc file");
+        if (pos+8 >= last_pos) return Status::Corruption("invalid RocksWorm file");
         uint64_t filesz = *(uint64_t*)pos;
         pos += 8;
 
-        if (pos+8 >= last_pos) return Status::Corruption("invalid roc file");
+        if (pos+8 >= last_pos) return Status::Corruption("invalid RocksWorm file");
         uint64_t namelen = *(uint64_t*)pos;
         pos += 8;
-        if (pos+namelen > last_pos) return Status::Corruption("invalid roc file");
+        if (pos+namelen > last_pos) return Status::Corruption("invalid RocksWorm file");
         std::string name;
         name.assign(pos,namelen);
         pos += namelen;
         
-        if (ans.find(name) != ans.end()) return Status::Corruption("duplicate manifest entries in roc file");
+        if (ans.find(name) != ans.end()) return Status::Corruption("duplicate manifest entries in RocksWorm file");
         ans[name] = pair<uint64_t,uint64_t>(current_offset,filesz);
         current_offset += filesz;       
     }
 
-    if (ans.size() == 0) return Status::Corruption("empty roc file");
+    if (ans.size() == 0) return Status::Corruption("empty RocksWorm file");
 
     if (opts_.http_stderr_log_level <= InfoLogLevel::INFO_LEVEL) {
         ostringstream msg;
-        msg << CensorURL(base_url_) << " roc manifest:" << endl;
+        msg << CensorURL(base_url_) << " RocksWorm manifest:" << endl;
         for (auto entry : ans) {
             msg << entry.first << ' ' << entry.second.first << ' ' << entry.second.second << endl;
         }

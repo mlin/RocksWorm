@@ -1,7 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include "gtest/gtest.h"
-#include "rocksdb-on-cloud/HTTP.h"
+#include "RocksWorm/HTTP.h"
 using namespace std;
 
 TEST(HTTP, mlin_net) {

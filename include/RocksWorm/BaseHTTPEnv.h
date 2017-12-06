@@ -4,8 +4,7 @@ implement the Env::GetChildren operation, and can override various aspects of
 HTTP[S] request formulation (URL rewriting, headers, etc.).
 */
 
-#ifndef BASEHTTPENV_H
-#define BASEHTTPENV_H
+#pragma once
 
 #include <string>
 #include <vector>
@@ -21,17 +20,17 @@ struct HTTPEnvOptions {
     // pool. It could be useful to share connection pools between HTTP Env
     // instances expected to communicate with the same endpoint (e.g.
     // s3.amazonaws.com)
-    HTTP::CURLpool *connpool;
+    HTTP::CURLpool *connpool = nullptr;
     
     // Parameters controlling HTTP retry logic. Connection errors, 5xx
     // response codes, and interrupted requests/responses can be retried.
 
     // Maximum number of retry attempts (not counting the initial attempt)
-    unsigned int retry_times;
+    unsigned int retry_times = 4;
     // Microseconds to wait before the first retry attempt
-    useconds_t retry_initial_delay;
+    useconds_t retry_initial_delay = 500000;
     // On each subsequent retry, the delay is multiplied by this factor
-    unsigned int retry_backoff_factor;
+    unsigned int retry_backoff_factor = 2;
 
     // stderr log level for HTTP operations. The base HTTP env logs at the
     // following levels:
@@ -39,15 +38,7 @@ struct HTTPEnvOptions {
     //   WARN   retry attempts
     //   INFO   requests and timed responses
     //   DEBUG  all HTTP headers
-    rocksdb::InfoLogLevel http_stderr_log_level;
-
-    HTTPEnvOptions()
-        : connpool(nullptr)
-        , retry_times(4)
-        , retry_initial_delay(500000)
-        , retry_backoff_factor(2)
-        , http_stderr_log_level(rocksdb::InfoLogLevel::WARN_LEVEL)
-        {}
+    rocksdb::InfoLogLevel http_stderr_log_level = rocksdb::InfoLogLevel::WARN_LEVEL;
 };
 
 class StdErrLogger : public rocksdb::Logger {
@@ -258,7 +249,4 @@ public:
         return inner_env_->TimeToString(time);
     }
 };
-
-
-#endif
 

@@ -11,11 +11,11 @@ IF(NOT CMAKE_BUILD_TYPE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 
 # Make PROJECT_SOURCE_DIR, PROJECT_BINARY_DIR, and PROJECT_NAME available.
-project(rocksdb-on-cloud)
+project(RocksWorm)
 
 ExternalProject_Add(upstream_rocksdb
     URL https://github.com/facebook/rocksdb/archive/v5.8.7.zip
-    PREFIX ${CMAKE_CURRENT_BINARY_DIR}
+    PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/rocksdb
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
     BUILD_COMMAND bash -c "export PORTABLE=1 && export USE_SSE=1 && export OPT='-DNDEBUG -O3 -march=ivybridge -msse4.2 -DHAVE_SSE42' && export USE_RTTI=1 && make -n static_lib && make -j4 static_lib"
@@ -48,20 +48,20 @@ set(CMAKE_CXX_FLAGS_RELEASE "-gdwarf -DNDEBUG -O3")
 set(COMMON_INCLUDES ${PROJECT_SOURCE_DIR}/include)
 include_directories(${COMMON_INCLUDES} src)
 
-add_library(rocksdb-on-cloud
-            include/rocksdb-on-cloud/HTTP.h src/HTTP.cc
-            include/rocksdb-on-cloud/BaseHTTPEnv.h src/BaseHTTPEnv.cc
-            include/rocksdb-on-cloud/RocHTTPEnv.h src/RocHTTPEnv.cc
-            include/rocksdb-on-cloud/GivenManifestHTTPEnv.h)
-add_dependencies(rocksdb-on-cloud upstream_rocksdb)
-add_executable(roc src/roc.cc)
-target_link_libraries(roc -pthread rocksdb-on-cloud rocksdb jemalloc z snappy bz2 zstd rt)
+add_library(RocksWorm
+            include/RocksWorm/HTTP.h src/HTTP.cc
+            include/RocksWorm/BaseHTTPEnv.h src/BaseHTTPEnv.cc
+            include/RocksWorm/RocksWormHTTPEnv.h src/RocksWormHTTPEnv.cc
+            include/RocksWorm/GivenManifestHTTPEnv.h)
+add_dependencies(RocksWorm upstream_rocksdb)
+add_executable(MakeRocksWormFileFromDB src/MakeRocksWormFileFromDB.cc)
+target_link_libraries(MakeRocksWormFileFromDB -pthread RocksWorm rocksdb jemalloc z snappy bz2 zstd rt)
 
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/include DESTINATION . FILES_MATCHING PATTERN "*.h")
 install(DIRECTORY ${ROCKSDB_INCLUDE_DIR} DESTINATION . FILES_MATCHING PATTERN "*.h")
-install(TARGETS rocksdb-on-cloud DESTINATION lib)
+install(TARGETS RocksWorm DESTINATION lib)
 install(FILES ${LIBROCKSDB_A} DESTINATION lib)
-install(TARGETS roc DESTINATION bin)
+install(TARGETS MakeRocksWormFileFromDB DESTINATION bin)
 
 ################################
 # Testing
@@ -72,7 +72,7 @@ if (test)
   # http://stackoverflow.com/a/9695234
   ExternalProject_Add(googletest
     URL https://github.com/google/googletest/archive/release-1.7.0.zip
-    PREFIX ${CMAKE_CURRENT_BINARY_DIR}/googletest
+    PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/googletest
     INSTALL_COMMAND ""
     LOG_DOWNLOAD ON
   )
@@ -89,9 +89,9 @@ if (test)
   ##############
   # Unit Tests
   ##############
-  add_executable(unit_tests test/unit/HTTP_test.cc include/rocksdb-on-cloud/GivenManifestHTTPEnv.h test/unit/GivenManifestHTTPEnv_test.cc test/unit/RocHTTPEnv_test.cc)
+  add_executable(unit_tests test/unit/HTTP_test.cc include/RocksWorm/GivenManifestHTTPEnv.h test/unit/GivenManifestHTTPEnv_test.cc test/unit/RocksWormHTTPEnv_test.cc)
 
-  target_link_libraries(unit_tests -pthread rocksdb-on-cloud rocksdb jemalloc z snappy bz2 zstd rt ${CURL_LIBRARY_PATH} gtest gtest_main)
+  target_link_libraries(unit_tests -pthread RocksWorm rocksdb jemalloc z snappy bz2 zstd rt ${CURL_LIBRARY_PATH} gtest gtest_main)
 
   add_test(unit_tests unit_tests)
 endif()
