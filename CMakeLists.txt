@@ -15,7 +15,7 @@ project(RocksWorm)
 
 ExternalProject_Add(upstream_rocksdb
     URL https://github.com/facebook/rocksdb/archive/v5.8.7.zip
-    PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/rocksdb
+    PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
     BUILD_COMMAND bash -c "export PORTABLE=1 && export USE_SSE=1 && export OPT='-DNDEBUG -O3 -march=ivybridge -msse4.2 -DHAVE_SSE42' && export USE_RTTI=1 && make -n static_lib && make -j4 static_lib"
@@ -72,7 +72,7 @@ if (test)
   # http://stackoverflow.com/a/9695234
   ExternalProject_Add(googletest
     URL https://github.com/google/googletest/archive/release-1.7.0.zip
-    PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/googletest
+    PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external
     INSTALL_COMMAND ""
     LOG_DOWNLOAD ON
   )

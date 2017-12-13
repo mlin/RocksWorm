@@ -39,10 +39,10 @@ void make_testdb1(string& ans) {
     ans = DBPATH;
 }
 
-int MakeRocksWorm(const string& dbpath, string& ans) {
+int MakeRocksWormFileFromDB(const string& dbpath, string& ans) {
     string fn = dbpath + ".rocksworm";
     stringstream cmd;
-    cmd << "build/bin/MakeRocksWorm " << dbpath << " " << fn;
+    cmd << "build/bin/MakeRocksWormFileFromDB " << dbpath << " " << fn;
     ans = fn;
     return system(cmd.str().c_str());
 }
@@ -51,7 +51,7 @@ TEST(roundtrip, small) {
     string dbpath;
     make_testdb1(dbpath);
     string fn_RocksWorm;
-    ASSERT_EQ(0,MakeRocksWorm(dbpath,fn_RocksWorm));
+    ASSERT_EQ(0,MakeRocksWormFileFromDB(dbpath,fn_RocksWorm));
 
     TestHTTPd httpd;
     map<string,string> httpfiles;
@@ -60,7 +60,7 @@ TEST(roundtrip, small) {
     
     stringstream localurl;
     localurl << "http://localhost:" << PORT << "/RocksWorm_integration_tests_roundtrip_small";
-    RocHTTPEnv env(localurl.str(), HTTPEnvOptions());
+    RocksWormHTTPEnv env(localurl.str(), HTTPEnvOptions());
 
     Status s;
     DB *db = nullptr;
@@ -171,7 +171,7 @@ TEST(roundtrip, medium) {
     string dbpath;
     make_mediumdb(dbpath);
     string fn_RocksWorm;
-    ASSERT_EQ(0,MakeRocksWorm(dbpath,fn_RocksWorm));
+    ASSERT_EQ(0,MakeRocksWormFileFromDB(dbpath,fn_RocksWorm));
 
     TestHTTPd httpd;
     map<string,string> httpfiles;
@@ -182,7 +182,7 @@ TEST(roundtrip, medium) {
     localurl << "http://localhost:" << PORT << "/RocksWorm_integration_tests_roundtrip_medium";
     HTTPEnvOptions envopts;
     //envopts.http_stderr_log_level = InfoLogLevel::INFO;
-    RocHTTPEnv env(localurl.str(), envopts);
+    RocksWormHTTPEnv env(localurl.str(), envopts);
     env.SetBackgroundThreads(4);
 
     Status s;
@@ -276,7 +276,7 @@ TEST(roundtrip, univ) {
     string dbpath;
     make_univdb(dbpath);
     string fn_RocksWorm;
-    ASSERT_EQ(0,MakeRocksWorm(dbpath,fn_RocksWorm));
+    ASSERT_EQ(0,MakeRocksWormFileFromDB(dbpath,fn_RocksWorm));
 
     TestHTTPd httpd;
     map<string,string> httpfiles;
@@ -287,7 +287,7 @@ TEST(roundtrip, univ) {
     localurl << "http://localhost:" << PORT << "/RocksWorm_integration_tests_roundtrip_univ";
     HTTPEnvOptions envopts;
     //envopts.http_stderr_log_level = InfoLogLevel::INFO;
-    RocHTTPEnv env(localurl.str(), envopts);
+    RocksWormHTTPEnv env(localurl.str(), envopts);
     env.SetBackgroundThreads(4);
 
     // We'll read the database without telling RocksDB it's universally
@@ -339,7 +339,7 @@ TEST(roundtrip, retry) {
     string dbpath;
     make_testdb1(dbpath);
     string fn_RocksWorm;
-    ASSERT_EQ(0,MakeRocksWorm(dbpath,fn_RocksWorm));
+    ASSERT_EQ(0,MakeRocksWormFileFromDB(dbpath,fn_RocksWorm));
 
     TestHTTPd httpd;
     map<string,string> httpfiles;
@@ -350,7 +350,7 @@ TEST(roundtrip, retry) {
     localurl << "http://localhost:" << PORT << "/RocksWorm_integration_tests_roundtrip_retry";
     HTTPEnvOptions envopts;
     envopts.http_stderr_log_level = InfoLogLevel::INFO_LEVEL;
-    RocHTTPEnv env(localurl.str(), envopts);
+    RocksWormHTTPEnv env(localurl.str(), envopts);
 
     Status s;
     DB *db = nullptr;

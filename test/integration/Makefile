@@ -10,7 +10,7 @@ test: all
 
 build/integration_tests: $(OBJS) test_httpd.h build/lib/librocksdb.a build/lib/libRocksWorm.a
 	g++ -o $@ -g -pthread \
-		-Lbuild/RocksWorm/googletest/src/googletest-build -Lbuild/lib \
+		-Lbuild/RocksWorm/external/src/googletest-build -Lbuild/lib \
 		-lgtest_main -lgtest $(OBJS) -lRocksWorm -lrocksdb -ljemalloc -lz -lsnappy -lbz2 -lzstd -lmicrohttpd -lcurl -lrt
 
 RocksWorm:
@@ -22,7 +22,7 @@ RocksWorm:
 
 build/%.o: %.cc
 	g++ -c -g -Wall -std=c++14 \
-		-Ibuild/RocksWorm/googletest/src/googletest/include -Ibuild/include \
+		-Ibuild/RocksWorm/external/src/googletest/include -Ibuild/include \
 		-o $@ $^
 
 clean:
