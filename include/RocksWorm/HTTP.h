@@ -1,6 +1,5 @@
 /** Wrappers for libcurl HTTP operations */
-#ifndef HTTP_H
-#define HTTP_H
+#pragma once
 
 #include <iostream>
 #include <string>
@@ -72,5 +71,3 @@ CURLcode HEAD(const std::string url, const headers& request_headers,
               CURLpool *pool = nullptr);
 
 }
-
-#endif

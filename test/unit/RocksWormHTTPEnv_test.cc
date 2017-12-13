@@ -1,12 +1,12 @@
 #include <iostream>
 #include <sstream>
 #include "gtest/gtest.h"
-#include "rocksdb-on-cloud/RocHTTPEnv.h"
+#include "RocksWorm/RocksWormHTTPEnv.h"
 using namespace std;
 using namespace rocksdb;
 
-TEST(RocHTTPEnv, testdb1) {
-    RocHTTPEnv env("https://github.com/mlin/rocksdb-on-cloud/raw/master/test/data/4e32de754389b819d8569c84604653d01859bd564f788be8fabb657412da3d93/testdb1.roc", HTTPEnvOptions());
+TEST(RocksWormHTTPEnv, testdb1) {
+    RocksWormHTTPEnv env("https://github.com/mlin/rocksdb-on-cloud/raw/master/test/data/4e32de754389b819d8569c84604653d01859bd564f788be8fabb657412da3d93/testdb1.roc", HTTPEnvOptions());
 
     Status s;
     DB *db = nullptr;
